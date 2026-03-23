@@ -1,65 +1,102 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import Image from "next/image";
+import { getAllPostsMeta, type PostMeta } from "@/lib/posts";
+import { PostSearch } from "@/components/PostSearch";
+import { format } from "date-fns";
 
-export default function Home() {
+export const metadata: Metadata = {
+  title: "Posts",
+  description: "Writing about daily life, routines, gear, and the small stuff.",
+};
+
+export default function HomePage() {
+  const posts = getAllPostsMeta();
+  const allTags = [...new Set(posts.flatMap((p) => p.tags))].sort();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <section className="hero">
+        <div className="hero-inner">
+          <p className="hero-label">
+            {process.env.NEXT_PUBLIC_AUTHOR ?? "VENKATA NARAYANA REDDY"}
           </p>
+
+          <h1>
+            Day-Day<br />
+            <span className="accent">living</span>{" "}
+            <span className="dim">&amp; things I have done</span>
+          </h1>
+
+          <p className="hero-sub">
+            Writing about <strong>daily habits</strong>
+          </p>
+
+          <div className="hero-stats">
+            <div>
+              <div className="hero-stat-num">{posts.length}</div>
+              <div className="hero-stat-label">posts</div>
+            </div>
+            <div>
+              <div className="hero-stat-num">{allTags.length}</div>
+              <div className="hero-stat-label">topics</div>
+            </div>
+            <div>
+              <div className="hero-stat-num">
+                {posts.reduce((a, p) => a + p.readTime, 0)}
+              </div>
+              <div className="hero-stat-label">min total</div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <div className="posts-section">
+        <PostSearch allTags={allTags} />
+        <p className="section-heading">all posts</p>
+        <div className="posts-grid">
+          {posts.map((post, i) => (
+            <PostCard key={post.slug} post={post} priority={i === 0} />
+          ))}
         </div>
-      </main>
-    </div>
+      </div>
+    </>
+  );
+}
+
+function PostCard({ post, priority }: { post: PostMeta; priority?: boolean }) {
+  const date = format(new Date(post.date), "MMM d, yyyy");
+  return (
+    <article className="post-card">
+      <div className="post-card-cover">
+        {post.coverImage ? (
+          <Image
+            src={post.coverImage}
+            alt={post.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 380px"
+            style={{ objectFit: "cover" }}
+            priority={priority}
+          />
+        ) : (
+          <div className="post-card-cover-placeholder">// no cover</div>
+        )}
+      </div>
+      <div className="post-card-body">
+        <div className="post-card-tags">
+          {post.tags.slice(0, 3).map((t) => (
+            <span key={t} className="tag">{t}</span>
+          ))}
+        </div>
+        <h2><Link href={`/blog/${post.slug}`}>{post.title}</Link></h2>
+        <p className="post-card-excerpt">{post.excerpt}</p>
+        <div className="post-card-meta">
+          <time dateTime={post.date}>{date}</time>
+          <span>·</span>
+          <span>{post.readTime} min</span>
+        </div>
+        <Link href={`/blog/${post.slug}`} className="read-more">read →</Link>
+      </div>
+    </article>
   );
 }
