@@ -1,106 +1,98 @@
-import type { Metadata } from "next";
+import { getPostBySlug, getPosts } from "@/lib/db";
 import { notFound } from "next/navigation";
-import Image from "next/image";
+import { MDXRenderer } from "@/components/MDXRenderer";
+import { ReadingProgress } from "@/components/ReadingProgress";
 import Link from "next/link";
-import { getAllSlugs, getPostBySlug } from "@/lib/posts";
-import { format } from "date-fns";
+import type { Metadata } from "next";
 
-export async function generateStaticParams() {
-  return getAllSlugs().map((slug) => ({ slug }));
-}
-
-export const dynamicParams = false;
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPostBySlug(slug).catch(() => null);
-  if (!post) return {};
-
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const img = post.coverImage ?? `${base}/og-default.png`;
-
+  const post = await getPostBySlug(slug);
+  if (!post) return { title: "Not Found" };
   return {
-    title: post.title,
+    title: `${post.title} — Venkata Narayana`,
     description: post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: "article",
-      publishedTime: post.date,
-      authors: [post.author],
-      images: [{ url: img, width: 1200, height: 630, alt: post.title }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: post.title,
-      description: post.excerpt,
-      images: [img],
-    },
   };
 }
 
-export default async function BlogPostPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function SinglePostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
+  const post = await getPostBySlug(slug);
+  if (!post) notFound();
 
-  let post;
-  try {
-    post = await getPostBySlug(slug);
-  } catch {
-    notFound();
-  }
-
-  const date = format(new Date(post!.date), "MMMM d, yyyy");
+  const allPosts = await getPosts();
+  const relatedPosts = allPosts.filter(p => p.id !== post.id).slice(0, 3);
+  
+  const wordCount = post.content.split(/\s+/).length;
+  const readTime = Math.max(1, Math.ceil(wordCount / 200));
+  const date = new Date(post.date).toLocaleDateString("en-IN", { 
+    month: "long", day: "numeric", year: "numeric" 
+  });
 
   return (
-    <article>
-      <header className="post-header">
-        <div className="post-header-inner">
-          <div className="tags">
-            {post!.tags.map((t) => (
-              <span key={t} className="tag">{t}</span>
-            ))}
+    <>
+      <ReadingProgress />
+      <article className="max-w-2xl mx-auto px-5 py-16">
+        <header className="mb-10">
+          <Link href="/blog" className="text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] transition-colors mb-6 inline-block">
+            ← Back to articles
+          </Link>
+          <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold tracking-tight leading-tight mb-4">
+            {post.title}
+          </h1>
+          <div className="flex items-center gap-3 text-sm text-[var(--color-fg-muted)] mb-4">
+            <span>{post.author}</span>
+            <span>·</span>
+            <time dateTime={post.date}>{date}</time>
+            <span>·</span>
+            <span>{readTime} min read</span>
           </div>
+          {(post.tags || []).length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map(tag => (
+                <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-[var(--color-accent-muted)] text-[var(--color-accent)] font-medium">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </header>
 
-          <h1>{post!.title}</h1>
-
-          <div className="post-header-meta">
-            <span>{post!.author}</span>
-            <span className="sep">/</span>
-            <time dateTime={post!.date}>{date}</time>
-            <span className="sep">/</span>
-            <span>{post!.readTime} min read</span>
+        {post.coverImage && (
+          <div className="rounded-lg overflow-hidden mb-10 border border-[var(--color-border)]">
+            <img src={post.coverImage} alt={post.title} className="w-full" />
           </div>
-        </div>
-      </header>
+        )}
 
-      {post!.coverImage && (
-        <div className="cover-image-wrapper">
-          <Image
-            src={post!.coverImage}
-            alt={post!.title}
-            width={720}
-            height={380}
-            priority
-            style={{ objectFit: "cover" }}
-          />
+        <div className="font-serif">
+          <MDXRenderer content={post.content} />
         </div>
-      )}
 
-      <Link href="/" className="back-link">
-        ← back to posts
-      </Link>
-      <div
-        className="prose"
-        dangerouslySetInnerHTML={{ __html: post!.contentHtml }}
-      />
-    </article>
+        <div className="mt-16 pt-8 border-t border-[var(--color-border)]">
+          <p className="text-sm text-[var(--color-fg-muted)]">
+            Written by <strong className="text-[var(--color-fg)] font-medium">{post.author}</strong> — 
+            Frontend developer at P2Pai. 
+            <Link href="/about" className="text-[var(--color-accent)] ml-1 hover:underline">More about me →</Link>
+          </p>
+        </div>
+
+        {relatedPosts.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-[var(--color-border)]">
+            <h3 className="text-sm font-medium mb-4">More articles</h3>
+            <div className="space-y-2">
+              {relatedPosts.map(rp => (
+                <Link 
+                  key={rp.id} 
+                  href={`/blog/${rp.slug}`}
+                  className="block py-2 text-[var(--color-fg-muted)] hover:text-[var(--color-accent)] transition-colors"
+                >
+                  {rp.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </article>
+    </>
   );
 }

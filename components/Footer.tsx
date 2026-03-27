@@ -1,21 +1,14 @@
+import Link from "next/link";
+
 export function Footer() {
-  const year   = new Date().getFullYear();
-  const author = process.env.NEXT_PUBLIC_AUTHOR ?? "dev";
-
   return (
-    <footer className="site-footer">
-      <div className="footer-inner">
-        <div className="footer-left">
-          <span className="footer-dot">●</span>
-          <span>
-            Narayana
-          </span>
-        </div>
-
-        <div className="footer-right">
-          <a href="https://github.com/venkatanarayanareddyp2pai-ops" target="_blank" rel="noreferrer">
-            GitHub
-          </a>
+    <footer className="border-t border-[var(--color-border)] mt-16">
+      <div className="max-w-5xl mx-auto px-5 py-8 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-[var(--color-fg-muted)]">
+        <p>-Venkata Narayana</p>
+        <div className="flex gap-5">
+          <a href="#" className="hover:text-[var(--color-fg)] transition-colors">GitHub</a>
+          <a href="#" className="hover:text-[var(--color-fg)] transition-colors">LinkedIn</a>
+          <Link href="/admin/login" className="hover:text-[var(--color-fg)] transition-colors">Admin</Link>
         </div>
       </div>
     </footer>

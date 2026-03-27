@@ -1,48 +1,48 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Unbounded } from "next/font/google";
-import "./globals.css";
-import { Header } from "@/components/Header";
+import { Playfair_Display, Lora, DM_Sans } from "next/font/google";
+import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import "./globals.css";
 
-const jetbrains = JetBrains_Mono({
+const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-playfair",
   display: "swap",
-  weight: ["300", "400", "600", "700"],
 });
 
-const unbounded = Unbounded({
+const lora = Lora({
   subsets: ["latin"],
-  variable: "--font-display",
+  variable: "--font-lora",
   display: "swap",
-  weight: ["400", "700", "900"],
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-dm-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: process.env.NEXT_PUBLIC_SITE_NAME ?? "devlog()",
-    template: `%s — ${process.env.NEXT_PUBLIC_SITE_NAME ?? "devlog()"}`,
-  },
-  description: "A developer writing about Next.js, TypeScript, and whatever else breaks in production.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
-  ),
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    siteName: process.env.NEXT_PUBLIC_SITE_NAME ?? "devlog()",
-  },
-  twitter: { card: "summary_large_image" },
-  robots: { index: true, follow: true },
+  title: "Venkata Narayana",
+  description: "Frontend developer writing about React, Next.js, CSS, and building for the web.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth"className={`${jetbrains.variable} ${unbounded.variable}`}>
-      <body>
-        <Header />
-        <main className="main-content">{children}</main>
-        <Footer />
+    <html lang="en" className={`${playfair.variable} ${lora.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <body className="font-sans bg-[var(--color-bg)] text-[var(--color-fg)] antialiased min-h-screen flex flex-col">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <Navbar />
+          <main className="flex-1 w-full">
+            {children}
+          </main>
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );
