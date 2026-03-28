@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getPosts } from "@/lib/db";
 import { HomeHero, PostGrid } from "@/components/HomeComponents";
 
@@ -12,7 +13,7 @@ export default async function HomePage() {
         {posts.length > 0 && (
           <div className="flex items-center justify-between mb-8 pb-3 border-b border-[var(--color-border)]">
             <h2 className="text-sm font-semibold tracking-wide">Latest Articles</h2>
-            <a href="/blog" className="text-xs text-[var(--color-accent)] hover:underline">View all →</a>
+            <Link href="/blog" className="text-xs text-[var(--color-accent)] hover:underline">View all →</Link>
           </div>
         )}
         <PostGrid posts={posts.slice(0, 6)} />

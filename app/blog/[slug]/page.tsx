@@ -4,6 +4,7 @@ import { MDXRenderer } from "@/components/MDXRenderer";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AuthorProfile } from "@/components/AuthorProfile";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -68,13 +69,7 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
           <MDXRenderer content={post.content} />
         </div>
 
-        <div className="mt-16 pt-8 border-t border-[var(--color-border)]">
-          <p className="text-sm text-[var(--color-fg-muted)]">
-            Written by <strong className="text-[var(--color-fg)] font-medium">{post.author}</strong> — 
-            Frontend developer at P2Pai. 
-            <Link href="/about" className="text-[var(--color-accent)] ml-1 hover:underline">More about me →</Link>
-          </p>
-        </div>
+        <AuthorProfile author={post.author} />
 
         {relatedPosts.length > 0 && (
           <div className="mt-12 pt-8 border-t border-[var(--color-border)]">

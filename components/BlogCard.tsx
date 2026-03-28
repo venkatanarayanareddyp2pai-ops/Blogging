@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Post } from "@/lib/db";
 
-export function BlogCard({ post, index = 0, featured = false }: { post: Post, index?: number, featured?: boolean }) {
+export function BlogCard({ post }: { post: Post }) {
   const date = new Date(post.date).toLocaleDateString("en-IN", { 
     month: "short", day: "numeric", year: "numeric" 
   });

@@ -1,30 +1,11 @@
 "use client";
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { Post } from "@/lib/db";
-import { useRef, MouseEvent, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 
 function TiltCard({ post, index }: { post: Post; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [8, -8]), { stiffness: 200, damping: 25 });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-8, 8]), { stiffness: 200, damping: 25 });
-
-  function handleMouse(e: MouseEvent) {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
-    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-  }
-
-  function resetMouse() {
-    mouseX.set(0);
-    mouseY.set(0);
-  }
-
   const date = new Date(post.date);
   const formattedDate = date.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
   const formattedTime = date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
@@ -33,45 +14,43 @@ function TiltCard({ post, index }: { post: Post; index: number }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.05 + index * 0.06, duration: 0.5, ease: [0.21, 0.47, 0.32, 0.98] }}
-      style={{ perspective: "800px" }}
+      transition={{ delay: 0.05 + index * 0.05, duration: 0.45, ease: [0.21, 0.47, 0.32, 0.98] }}
+      className="group block"
     >
-      <motion.div
-        ref={ref}
-        onMouseMove={handleMouse}
-        onMouseLeave={resetMouse}
-        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
-      >
-        <Link href={`/blog/${post.slug}`} className="group block">
-          <div className="relative aspect-square rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] transition-shadow duration-300 group-hover:shadow-xl group-hover:shadow-blue-500/5">
-            {post.coverImage ? (
-              <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[var(--color-surface)] via-[var(--color-border)]/20 to-[var(--color-surface)] flex items-center justify-center">
-                <span className="text-5xl font-bold text-[var(--color-border)] select-none">{post.title.charAt(0)}</span>
-              </div>
-            )}
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-5 pt-16">
-              <p className="text-[11px] text-white/60 font-mono mb-2 tabular-nums">
-                {formattedDate} · {formattedTime}
-              </p>
-              <h3 className="text-white font-semibold leading-snug text-base mb-2 line-clamp-2">
-                {post.title}
-              </h3>
-              <div className="flex items-center gap-2 flex-wrap">
-                {(post.tags || []).slice(0, 3).map(tag => (
-                  <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-white/15 text-white/80 backdrop-blur-sm font-mono">
-                    {tag}
-                  </span>
-                ))}
-                <span className="text-[10px] text-white/50 ml-auto font-mono">{readTime} min</span>
-              </div>
+      <Link href={`/blog/${post.slug}`} className="block">
+        <div className="relative aspect-square rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm hover:shadow-lg transition-shadow duration-300">
+          {post.coverImage ? (
+            <img
+              src={post.coverImage}
+              alt={post.title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full bg-[var(--color-bg)] flex items-center justify-center">
+              <span className="text-5xl font-bold text-[var(--color-fg-muted)] select-none">{post.title.charAt(0)}</span>
+            </div>
+          )}
+
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/70 via-slate-700/40 to-transparent p-5 flex flex-col justify-end">
+            <p className="text-[11px] text-slate-100/80 font-mono mb-2 tabular-nums">
+              {formattedDate} · {formattedTime}
+            </p>
+            <h3 className="text-white font-semibold leading-snug text-base mb-2 line-clamp-2">
+              {post.title}
+            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              {(post.tags || []).slice(0, 3).map(tag => (
+                <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full bg-white/20 text-white/90 backdrop-blur-sm font-mono">
+                  {tag}
+                </span>
+              ))}
+              <span className="text-[10px] text-slate-100/70 ml-auto font-mono">{readTime} min</span>
             </div>
           </div>
-        </Link>
-      </motion.div>
+        </div>
+      </Link>
     </motion.div>
   );
 }
@@ -132,7 +111,7 @@ export function BlogArticlesGrid({ posts }: { posts: Post[] }) {
           ))}
         </div>
       ) : (
-        <p className="py-16 text-center text-sm text-[var(--color-fg-muted)] font-mono">// no results found</p>
+        <p className="py-16 text-center text-sm text-[var(--color-fg-muted)] font-mono">No results found</p>
       )}
     </div>
   );

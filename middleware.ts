@@ -5,14 +5,15 @@ export function middleware(request: NextRequest) {
   
   if (path.startsWith('/admin') && !path.startsWith('/admin/login')) {
     const session = request.cookies.get('admin_session');
-    if (session?.value !== "true") {
+    // Session token should be a random string, not "true"
+    if (!session?.value || session.value === "true" || session.value.length < 20) {
       return Response.redirect(new URL('/admin/login', request.url));
     }
   }
   
   if (path === '/admin/login') {
     const session = request.cookies.get('admin_session');
-    if (session?.value === "true") {
+    if (session?.value && session.value !== "true" && session.value.length >= 20) {
       return Response.redirect(new URL('/admin', request.url));
     }
   }
