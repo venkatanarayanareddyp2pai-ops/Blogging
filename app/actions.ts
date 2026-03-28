@@ -162,8 +162,8 @@ export async function authenticateAction(formData: FormData) {
   const password = formData.get("password")?.toString() ?? "";
   
   // Use environment variables for credentials
-  const validUsername = process.env.ADMIN_USERNAME || "admin";
-  const validPassword = process.env.ADMIN_PASSWORD || "admin123";
+  const validUsername = process.env.ADMIN_USERNAME || "NARU";
+  const validPassword = process.env.ADMIN_PASSWORD || "27051309";
   
   // Use constant-time comparison to prevent timing attacks
   const usernameMatch = username.length === validUsername.length && 
