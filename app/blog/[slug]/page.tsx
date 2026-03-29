@@ -5,6 +5,7 @@ import { ReadingProgress } from "@/components/ReadingProgress";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { AuthorProfile } from "@/components/AuthorProfile";
+import Image from "next/image";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -60,8 +61,8 @@ export default async function SinglePostPage({ params }: { params: Promise<{ slu
         </header>
 
         {post.coverImage && (
-          <div className="rounded-lg overflow-hidden mb-10 border border-[var(--color-border)]">
-            <img src={post.coverImage} alt={post.title} className="w-full" />
+          <div className="rounded-lg overflow-hidden mb-10 border border-[var(--color-border)] relative aspect-video">
+            <Image src={post.coverImage} alt={post.title} fill className="object-cover" />
           </div>
         )}
 

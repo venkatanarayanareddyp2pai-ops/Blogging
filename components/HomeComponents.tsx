@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Post } from "@/lib/db";
+import Image from "next/image";
 
 function GridBackground() {
   return (
@@ -31,10 +32,11 @@ function HomeProfileCard() {
       <div className="relative rounded-[2rem] overflow-hidden bg-[var(--color-bg)] border border-[var(--color-border)] shadow-2xl dark:shadow-none hover:border-gray-300 dark:hover:border-zinc-700 transition-colors duration-500">
         
         <div className="h-36 w-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-900 relative overflow-hidden group/banner">
-          <img 
+          <Image 
             src="/profile.jpg" 
             alt="Profile cover"
-            className="w-full h-full object-cover transition-transform duration-700 group-hover/banner:scale-105"
+            fill
+            className="object-cover transition-transform duration-700 group-hover/banner:scale-105"
           />
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
             <span className="text-[10px] text-[var(--color-fg-muted)] font-mono tracking-widest uppercase">/public/file.svg</span>
@@ -148,10 +150,11 @@ function TiltCard({ post, index }: { post: Post; index: number }) {
       <Link href={`/blog/${post.slug}`} className="block">
         <div className="relative aspect-square rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm hover:shadow-lg transition-shadow duration-300">
           {post.coverImage ? (
-            <img
+            <Image
               src={post.coverImage}
               alt={post.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-[var(--color-bg)] flex items-center justify-center">

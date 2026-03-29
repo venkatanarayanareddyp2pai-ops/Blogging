@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function AuthorProfile({ 
   author = "Venkata Narayana", 
   role = "Student: still learning, working, and blogging",
@@ -16,10 +18,11 @@ export function AuthorProfile({
           {author?.split(" ").map(n => n[0]).join("").substring(0, 2) || "VN"}
         </span>
         
-        <img
+        <Image
           src="/profile.jpg"
           alt={author}
-          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-110 group-hover:scale-100"
+          fill
+          className="object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500 scale-110 group-hover:scale-100"
         />
       </div>
 

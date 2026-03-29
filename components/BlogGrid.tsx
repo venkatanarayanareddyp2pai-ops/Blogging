@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Post } from "@/lib/db";
 import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
+import Image from "next/image";
 
 function TiltCard({ post, index }: { post: Post; index: number }) {
   const date = new Date(post.date);
@@ -22,10 +23,11 @@ function TiltCard({ post, index }: { post: Post; index: number }) {
       <Link href={`/blog/${post.slug}`} className="block">
         <div className="relative aspect-square rounded-xl overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm hover:shadow-lg transition-shadow duration-300">
           {post.coverImage ? (
-            <img
+            <Image
               src={post.coverImage}
               alt={post.title}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              fill
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-[var(--color-bg)] flex items-center justify-center">

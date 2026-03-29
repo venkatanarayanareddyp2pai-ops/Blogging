@@ -1,6 +1,11 @@
 "use server";
-import { createPost, deletePost, updatePost } from "@/lib/db";
+
 import { revalidatePath } from "next/cache";
+import { createPost, updatePost, deletePost } from "../lib/db";
+
+export async function revalidateBlog() {
+  revalidatePath("/blog");
+}
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import path from "path";

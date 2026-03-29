@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { randomUUID } from "crypto";
 
 export interface Post {
   id: string;
@@ -30,4 +31,62 @@ export async function getPostBySlug(
 ): Promise<Post | undefined> {
   const posts = await getPosts();
   return posts.find((p) => p.slug === slug);
+}
+
+export async function createPost(postData: {
+  title: string;
+  tags: string[];
+  coverImage: string;
+  content: string;
+  excerpt: string;
+}): Promise<void> {
+  const posts = await getPosts();
+  
+  const slug = postData.title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  
+  const newPost: Post = {
+    id: randomUUID(),
+    slug,
+    title: postData.title,
+    tags: postData.tags,
+    coverImage: postData.coverImage,
+    excerpt: postData.excerpt,
+    content: postData.content,
+    author: "Admin", // Default author, can be changed later
+    date: new Date().toISOString(),
+  };
+  
+  posts.push(newPost);
+  
+  await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
+}
+
+export async function updatePost(
+  id: string,
+  updates: Partial<Pick<Post, 'title' | 'tags' | 'coverImage' | 'content' | 'excerpt'>>
+): Promise<void> {
+  const posts = await getPosts();
+  const index = posts.findIndex(p => p.id === id);
+  
+  if (index === -1) {
+    throw new Error('Post not found');
+  }
+  
+  posts[index] = { ...posts[index], ...updates };
+  
+  await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
+}
+
+export async function deletePost(id: string): Promise<void> {
+  const posts = await getPosts();
+  const filteredPosts = posts.filter(p => p.id !== id);
+  
+  if (filteredPosts.length === posts.length) {
+    throw new Error('Post not found');
+  }
+  
+  await fs.writeFile(DATA_FILE, JSON.stringify(filteredPosts, null, 2));
 }
