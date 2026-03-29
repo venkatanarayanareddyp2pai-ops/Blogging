@@ -1,7 +1,20 @@
 import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
-import { kv } from "@vercel/kv";
+import { Redis } from "@upstash/redis";
+
+// Initialize Redis client - try multiple environment variable combinations
+const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    })
+  : process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN
+  ? new Redis({
+      url: process.env.KV_REST_API_URL,
+      token: process.env.KV_REST_API_TOKEN,
+    })
+  : null;
 
 export interface Post {
   id: string;
@@ -16,22 +29,26 @@ export interface Post {
 }
 
 const DATA_FILE = path.join(process.cwd(), "data", "posts.json");
-const USE_KV = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
+const USE_KV = !!redis;
 
-// Helper to ensure initial state on KV
-async function ensureKVReady(): Promise<Post[]> {
+// Helper to ensure initial state on Redis
+async function ensureRedisReady(): Promise<Post[]> {
+  if (!redis) {
+    throw new Error("Redis client not initialized");
+  }
+  
   try {
-    const data = await kv.get<Post[]>("posts");
+    const data = await redis.get<Post[]>("posts");
     if (!data) {
-      // Seed with local data if Vercel KV is empty
+      // Seed with local data if Redis is empty
       const localData = await fs.readFile(DATA_FILE, "utf8").catch(() => "[]");
       const posts: Post[] = JSON.parse(localData);
-      await kv.set("posts", posts);
+      await redis.set("posts", posts);
       return posts;
     }
     return data;
   } catch (error) {
-    console.error("KV Error initializing data. Falling back to empty array.", error);
+    console.error("Redis Error initializing data. Falling back to empty array.", error);
     return [];
   }
 }
@@ -39,7 +56,7 @@ async function ensureKVReady(): Promise<Post[]> {
 export async function getPosts(): Promise<Post[]> {
   let posts: Post[] = [];
   if (USE_KV) {
-    posts = await ensureKVReady();
+    posts = await ensureRedisReady();
   } else {
     try {
       const data = await fs.readFile(DATA_FILE, "utf8");
@@ -90,7 +107,8 @@ export async function createPost(postData: {
   posts.push(newPost);
   
   if (USE_KV) {
-    await kv.set("posts", posts);
+    if (!redis) throw new Error("Redis client not available");
+    await redis.set("posts", posts);
   } else {
     await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
   }
@@ -110,7 +128,8 @@ export async function updatePost(
   posts[index] = { ...posts[index], ...updates };
   
   if (USE_KV) {
-    await kv.set("posts", posts);
+    if (!redis) throw new Error("Redis client not available");
+    await redis.set("posts", posts);
   } else {
     await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
   }
@@ -125,7 +144,8 @@ export async function deletePost(id: string): Promise<void> {
   }
   
   if (USE_KV) {
-    await kv.set("posts", filteredPosts);
+    if (!redis) throw new Error("Redis client not available");
+    await redis.set("posts", filteredPosts);
   } else {
     await fs.writeFile(DATA_FILE, JSON.stringify(filteredPosts, null, 2));
   }

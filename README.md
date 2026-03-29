@@ -35,37 +35,40 @@ A modern, responsive blog built with Next.js 16, featuring an admin panel for co
 Required for full functionality:
 
 - `ADMIN_USERNAME` & `ADMIN_PASSWORD`: Admin login credentials
-- `KV_REST_API_URL` & `KV_REST_API_TOKEN`: Vercel KV for data storage
+- `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN`: Upstash Redis for data storage
 - `BLOB_READ_WRITE_TOKEN`: Vercel Blob for image uploads
+
+**Note**: If using Vercel Marketplace Upstash Redis integration, it sets `KV_REST_API_URL` and `KV_REST_API_TOKEN` instead. The code automatically detects which variables are available.
 
 ## Deployment to Vercel
 
-### 1. Set up Vercel Project
+### Option 1: Using Vercel Marketplace (Recommended)
 
 1. Connect your GitHub repository to Vercel
 2. Deploy the project
+3. Add "Upstash Redis" from the Marketplace (sets `KV_REST_API_URL` and `KV_REST_API_TOKEN`)
+4. Add "Vercel Blob" integration
+5. Set admin credentials
+6. Redeploy
 
-### 2. Add Vercel KV (Required for data persistence)
+### Option 2: Direct Upstash Setup
 
-1. In your Vercel dashboard, go to your project
-2. Go to "Integrations" tab
-3. Search for "KV" and add it to your project
-4. This will automatically set `KV_REST_API_URL` and `KV_REST_API_TOKEN` environment variables
-
-### 3. Add Vercel Blob (Required for image uploads)
-
-1. In the "Integrations" tab, search for "Blob" and add it
-2. This will set the `BLOB_READ_WRITE_TOKEN` environment variable
-
-### 4. Set Admin Credentials
-
-In your Vercel project settings, add these environment variables:
-- `ADMIN_USERNAME`: Your admin username
-- `ADMIN_PASSWORD`: A strong password for admin access
-
-### 5. Redeploy
-
-After adding the integrations, Vercel will automatically redeploy with the new environment variables.
+1. **Create Upstash Account**: Go to [upstash.com](https://upstash.com) and create a Redis database
+2. **Get Connection Details**: Copy `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+3. **Connect to Vercel Project**:
+   ```bash
+   vercel link
+   ```
+4. **Pull Environment Variables**:
+   ```bash
+   vercel env pull .env.development.local
+   ```
+5. **Set Environment Variables in Vercel**:
+   - `UPSTASH_REDIS_REST_URL`: Your Redis REST URL
+   - `UPSTASH_REDIS_REST_TOKEN`: Your Redis REST Token
+   - `ADMIN_USERNAME`: Your admin username
+   - `ADMIN_PASSWORD`: Your admin password
+6. **Deploy**: Vercel will automatically deploy with the new variables
 
 ## Admin Panel Usage
 
