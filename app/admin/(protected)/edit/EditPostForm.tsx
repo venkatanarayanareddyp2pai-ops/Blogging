@@ -1,10 +1,12 @@
 "use client";
 
 import { useActionState } from "react";
-import { updatePostAction } from "@/app/actions";
+import { updatePostAction, deletePostAction } from "@/app/actions";
 import { Post } from "@/lib/db";
+import { useRouter } from "next/navigation";
 
 export default function EditPostForm({ post }: { post: Post }) {
+  const router = useRouter();
   const [state, formAction, isPending] = useActionState(async (_prevState: unknown, formData: FormData) => {
     try {
       await updatePostAction(formData);
@@ -13,6 +15,20 @@ export default function EditPostForm({ post }: { post: Post }) {
       return { success: false, error: (error as Error).message };
     }
   }, { success: false });
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this article? This action cannot be undone.")) {
+      return;
+    }
+    
+    try {
+      await deletePostAction(post.id);
+      router.push("/admin");
+      router.refresh();
+    } catch (error) {
+      alert("Failed to delete article: " + (error as Error).message);
+    }
+  };
 
   return (
     <div className="max-w-xl animate-fade-in">
@@ -78,13 +94,23 @@ export default function EditPostForm({ post }: { post: Post }) {
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={isPending}
-          className="bg-[var(--color-fg)] text-[var(--color-bg)] text-sm px-5 py-2.5 rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isPending ? "Saving..." : "Save changes"}
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={isPending}
+            className="bg-[var(--color-fg)] text-[var(--color-bg)] text-sm px-5 py-2.5 rounded-md hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isPending ? "Saving..." : "Save changes"}
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="bg-red-600 text-white text-sm px-5 py-2.5 rounded-md hover:bg-red-700 transition-colors"
+          >
+            Delete article
+          </button>
+        </div>
       </form>
     </div>
   );
