@@ -2,8 +2,17 @@ import { getPosts } from "@/lib/db";
 import { deletePostAction } from "@/app/actions";
 import Link from "next/link";
 import { Edit2, ExternalLink, FileText, Trash2, Plus } from "lucide-react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export default async function AdminDashboard() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get('admin_session');
+  
+  if (!session?.value || session.value === "true" || session.value.length < 20) {
+    redirect('/admin/login');
+  }
+  
   const posts = await getPosts();
   
   return (
