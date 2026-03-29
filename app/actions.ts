@@ -2,14 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { createPost, updatePost, deletePost } from "../lib/db";
-
-export async function revalidateBlog() {
-  revalidatePath("/blog");
-}
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import path from "path";
 import { promises as fs } from "fs";
+import { put } from "@vercel/blob";
+
+const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+
+export async function revalidateBlog() {
+  revalidatePath("/blog");
+}
 
 export async function submitPostAction(formData: FormData) {
   const title = (formData.get("title") as string)?.trim() ?? "";
@@ -51,10 +54,16 @@ export async function submitPostAction(formData: FormData) {
     // Sanitize filename
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '').replace(/\.{2,}/g, '.');
     const filename = `${Date.now()}-${safeName}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadDir, { recursive: true });
-    await fs.writeFile(path.join(uploadDir, filename), buffer);
-    coverImage = `/uploads/${filename}`;
+
+    if (USE_BLOB) {
+      const blob = await put(filename, file, { access: 'public' });
+      coverImage = blob.url;
+    } else {
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
+      await fs.mkdir(uploadDir, { recursive: true });
+      await fs.writeFile(path.join(uploadDir, filename), buffer);
+      coverImage = `/uploads/${filename}`;
+    }
   }
   
   const tags = tagsRaw
@@ -125,10 +134,16 @@ export async function updatePostAction(formData: FormData) {
     // Sanitize filename
     const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '').replace(/\.{2,}/g, '.');
     const filename = `${Date.now()}-${safeName}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await fs.mkdir(uploadDir, { recursive: true });
-    await fs.writeFile(path.join(uploadDir, filename), buffer);
-    coverImage = `/uploads/${filename}`;
+
+    if (USE_BLOB) {
+      const blob = await put(filename, file, { access: 'public' });
+      coverImage = blob.url;
+    } else {
+      const uploadDir = path.join(process.cwd(), "public", "uploads");
+      await fs.mkdir(uploadDir, { recursive: true });
+      await fs.writeFile(path.join(uploadDir, filename), buffer);
+      coverImage = `/uploads/${filename}`;
+    }
   }
 
   const tags = tagsRaw

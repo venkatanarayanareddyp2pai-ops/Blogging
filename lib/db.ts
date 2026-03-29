@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { kv } from "@vercel/kv";
 
 export interface Post {
   id: string;
@@ -15,14 +16,41 @@ export interface Post {
 }
 
 const DATA_FILE = path.join(process.cwd(), "data", "posts.json");
+const USE_KV = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
+
+// Helper to ensure initial state on KV
+async function ensureKVReady(): Promise<Post[]> {
+  try {
+    const data = await kv.get<Post[]>("posts");
+    if (!data) {
+      // Seed with local data if Vercel KV is empty
+      const localData = await fs.readFile(DATA_FILE, "utf8").catch(() => "[]");
+      const posts: Post[] = JSON.parse(localData);
+      await kv.set("posts", posts);
+      return posts;
+    }
+    return data;
+  } catch (error) {
+    console.error("KV Error initializing data. Falling back to empty array.", error);
+    return [];
+  }
+}
 
 export async function getPosts(): Promise<Post[]> {
-  const data = await fs.readFile(DATA_FILE, "utf8");
-  const posts: Post[] = JSON.parse(data);
+  let posts: Post[] = [];
+  if (USE_KV) {
+    posts = await ensureKVReady();
+  } else {
+    try {
+      const data = await fs.readFile(DATA_FILE, "utf8");
+      posts = JSON.parse(data);
+    } catch {
+      posts = []; // Fallback to empty if file missing
+    }
+  }
 
   return posts.sort(
-    (a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
 }
 
@@ -61,7 +89,11 @@ export async function createPost(postData: {
   
   posts.push(newPost);
   
-  await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
+  if (USE_KV) {
+    await kv.set("posts", posts);
+  } else {
+    await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
+  }
 }
 
 export async function updatePost(
@@ -77,7 +109,11 @@ export async function updatePost(
   
   posts[index] = { ...posts[index], ...updates };
   
-  await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
+  if (USE_KV) {
+    await kv.set("posts", posts);
+  } else {
+    await fs.writeFile(DATA_FILE, JSON.stringify(posts, null, 2));
+  }
 }
 
 export async function deletePost(id: string): Promise<void> {
@@ -88,5 +124,9 @@ export async function deletePost(id: string): Promise<void> {
     throw new Error('Post not found');
   }
   
-  await fs.writeFile(DATA_FILE, JSON.stringify(filteredPosts, null, 2));
+  if (USE_KV) {
+    await kv.set("posts", filteredPosts);
+  } else {
+    await fs.writeFile(DATA_FILE, JSON.stringify(filteredPosts, null, 2));
+  }
 }
